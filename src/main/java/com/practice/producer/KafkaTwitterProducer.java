@@ -32,28 +32,28 @@ public class KafkaTwitterProducer {
 
     Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
-//    @Scheduled(fixedDelay = 86400000, initialDelay = 30000)
-//    public void process() throws Exception {
-//        logger.info("Producer started");
-//        BlockingQueue<String> msgQueue = new LinkedBlockingQueue<String>(100000);
-//        Client client = twitterClientService.createClient(msgQueue);
-//        while (!client.isDone()) {
-//            try {
-//                String msg = msgQueue.poll(5, TimeUnit.SECONDS);
-//                ProducerRecord<String, String> producerRecord = new ProducerRecord<String, String>(properties.getTopic(), msg);
-//                producer.send(producerRecord, new Callback() {
-//                    @Override
-//                    public void onCompletion(RecordMetadata recordMetadata, Exception e) {
-//                        if (Objects.nonNull(e)) {
-//                            logger.error("Unable to push message");
-//                        }
-//                    }
-//                });
-//                producer.flush();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        client.stop();
-//    }
+    @Scheduled(fixedDelay = 86400000, initialDelay = 30000)
+    public void process() throws Exception {
+        logger.info("Producer started");
+        BlockingQueue<String> msgQueue = new LinkedBlockingQueue<String>(100000);
+        Client client = twitterClientService.createClient(msgQueue);
+        while (!client.isDone()) {
+            try {
+                String msg = msgQueue.poll(5, TimeUnit.SECONDS);
+                ProducerRecord<String, String> producerRecord = new ProducerRecord<String, String>(properties.getTopic(), msg);
+                producer.send(producerRecord, new Callback() {
+                    @Override
+                    public void onCompletion(RecordMetadata recordMetadata, Exception e) {
+                        if (Objects.nonNull(e)) {
+                            logger.error("Unable to push message");
+                        }
+                    }
+                });
+                producer.flush();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        client.stop();
+    }
 }
