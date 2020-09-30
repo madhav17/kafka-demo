@@ -3,6 +3,7 @@ package com.practice.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.practice.config.KafkaDemoProperties;
 import com.practice.dto.TweetDTO;
+import com.practice.es.repository.Tweet;
 import com.practice.es.repository.TweetRepository;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -14,6 +15,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.practice.util.Util.convertToTweet;
 
@@ -37,13 +40,18 @@ public class KafkaTwitterConsumer {
     @Scheduled(fixedDelay = 1000, initialDelay = 30000)
     public void process() throws Exception {
         logger.info("Consumer Started");
+        List<Tweet> batch = new ArrayList<>();
 
         ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
         if (!records.isEmpty()) {
             for (ConsumerRecord<String, String> record : records) {
                 TweetDTO tweetDTO = objectMapper.readValue(record.value(), TweetDTO.class);
-                tweetRepository.save(convertToTweet(tweetDTO));
+                batch.add(convertToTweet(tweetDTO));
             }
+        }
+        if (!batch.isEmpty()) {
+            tweetRepository.saveAll(batch);
+            consumer.commitSync();
         }
 
     }
